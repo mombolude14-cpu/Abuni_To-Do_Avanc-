@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>abuni To-Do Avancée | Votre organisation simplifiée</title>
+    <meta name="description"
+        content="Une application de gestion de tâches moderne et avancée pour organiser vos journées. Drag-and-drop, catégories, recherche et plus encore.">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="light-mode">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-lucide="check-circle" class="logo-icon"></i>
+                    <span>abuni To-Do Avancée</span>
+                </div>
+                <button id="close-sidebar" class="mobile-only">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="nav-section">
+                    <h3 class="section-title" data-i18n="views">Vues</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active" data-filter="all">
+                            <i data-lucide="layout-grid"></i>
+                            <span data-i18n="all_tasks">Toutes les tâches</span>
+                            <span class="count" id="count-all">0</span>
+                        </li>
+                        <li class="nav-item" data-filter="today">
+                            <i data-lucide="calendar"></i>
+                            <span data-i18n="today">Aujourd'hui</span>
+                            <span class="count" id="count-today">0</span>
+                        </li>
+                        <li class="nav-item" data-filter="completed">
+                            <i data-lucide="check-square"></i>
+                            <span data-i18n="completed">Terminées</span>
+                            <span class="count" id="count-completed">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="section-header">
+                        <h3 class="section-title" data-i18n="categories">Catégories</h3>
+                        <button id="add-category-btn" title="Ajouter une catégorie">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    </div>
+                    <ul class="nav-list" id="category-list">
+                        <!-- Les catégories seront affichées ici -->
+                    </ul>
+                </div>
+
+                <div class="nav-section stats-section">
+                    <h3 class="section-title" data-i18n="stats">Statistiques</h3>
+                    <div class="progress-container">
+                        <div class="progress-info">
+                            <span data-i18n="progress">Progression</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="help-btn" class="theme-btn">
+                    <i data-lucide="help-circle"></i>
+                    <span data-i18n="help_center">Centre d'aide</span>
+                </button>
+                <button id="settings-btn" class="theme-btn">
+                    <i data-lucide="settings"></i>
+                    <span data-i18n="settings">Paramètres</span>
+                </button>
+                <button id="theme-toggle" class="theme-btn">
+                    <i data-lucide="droplets" id="theme-icon"></i>
+                    <span id="theme-text" data-i18n="theme_blue">Mode Bleu</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Rechercher des tâches...">
+                </div>
+                <div class="header-actions">
+                    <button id="mobile-menu-toggle" class="mobile-only">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <button id="open-modal-btn" class="btn btn-primary">
+                        <i data-lucide="plus"></i>
+                        <span data-i18n="new_task">Nouvelle tâche</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div class="view-header">
+                    <h1 id="current-view-title">Toutes les tâches</h1>
+                    <div class="sort-container">
+                        <select id="sort-select">
+                            <option value="createdAt-desc">Plus récent</option>
+                            <option value="createdAt-asc">Plus ancien</option>
+                            <option value="dueDate-asc">Date d'échéance</option>
+                            <option value="priority-desc">Priorité</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="task-list-container" id="task-list">
+                    <!-- Les tâches seront affichées ici -->
+                    <div class="empty-state" id="empty-state">
+                        <i data-lucide="clipboard-list"></i>
+                        <p data-i18n="no_tasks">Aucune tâche trouvée. Commencez par en ajouter une !</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Créer une nouvelle tâche</h2>
+                <button class="close-modal" id="close-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title">Titre</label>
+                    <input type="text" id="task-title" placeholder="Que faut-il faire ?" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-desc">Description</label>
+                    <textarea id="task-desc" rows="3" placeholder="Ajouter plus de détails..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-priority">Priorité</label>
+                        <select id="task-priority">
+                            <option value="low">Basse</option>
+                            <option value="medium" selected>Moyenne</option>
+                            <option value="high">Haute</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-category">Catégorie</label>
+                        <select id="task-category">
+                            <!-- Les catégories seront ajoutées ici -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="task-date">Date d'échéance</label>
+                    <input type="date" id="task-date">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-modal-btn" data-i18n="cancel">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="save-task-btn" data-i18n="save">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="category-modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Nouvelle catégorie</h2>
+                <button class="close-modal" id="close-cat-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="category-form">
+                <div class="form-group">
+                    <label for="cat-name">Nom de la catégorie</label>
+                    <input type="text" id="cat-name" placeholder="ex: Travail, Personnel..." required>
+                </div>
+                <div class="form-group">
+                    <label for="cat-color">Couleur</label>
+                    <input type="color" id="cat-color" value="#4F46E5">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-cat-btn">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Guide d'utilisation - abuni To-Do</h2>
+                <button class="close-modal" id="close-help-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="help-content">
+                <h3>C'est quoi une application To-Do ?</h3>
+                <p>Une application "To-Do" (à faire) est un outil numérique conçu pour vous aider à lister, organiser et
+                    suivre toutes les tâches que vous devez accomplir. C'est l'évolution moderne de la liste de courses
+                    ou de la "to-do list" sur papier.</p>
+
+                <h3>Pourquoi l'utiliser ?</h3>
+                <ul>
+                    <li><strong>Libération mentale</strong> : En notant vos tâches, vous videz votre esprit et réduisez
+                        le stress.</li>
+                    <li><strong>Productivité</strong> : Visualisez ce qui est urgent et gérez mieux votre temps.</li>
+                    <li><strong>Satisfaction</strong> : Cocher une tâche terminée procure un sentiment
+                        d'accomplissement.</li>
+                </ul>
+
+                <h3>Comment utiliser abuni To-Do ?</h3>
+                <p>1. <strong>Ajouter une tâche</strong> : Cliquez sur "+ Nouvelle tâche" en haut à droite. Donnez-lui
+                    un titre, une description et choisissez sa priorité.</p>
+                <p>2. <strong>Catégoriser</strong> : Utilisez les catégories (Travail, Personnel, etc.) pour séparer vos
+                    différents domaines de vie.</p>
+                <p>3. <strong>Prioriser</strong> : Les tâches "Haute" priorité apparaîtront avec un badge rouge pour
+                    attirer votre attention.</p>
+                <p>4. <strong>Réorganiser</strong> : Vous pouvez glisser-déposer (Drag & Drop) les tâches pour changer
+                    leur ordre d'importance.</p>
+                <p>5. <strong>Changer de thème</strong> : Cliquez sur le bouton en bas à gauche pour basculer entre les
+                    modes <strong>Clair</strong>, <strong>Sombre</strong> et <strong>Bleu</strong>.</p>
+
+                <h3>Astuces</h3>
+                <p>Utilisez la barre de recherche en haut pour retrouver rapidement une tâche ancienne ou spécifique.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="close-help-btn">J'ai compris !</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Paramètres Avancés</h2>
+                <button class="close-modal" id="close-settings-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="help-content">
+                <form id="settings-form">
+                    <div class="settings-grid">
+                        <div class="settings-section">
+                            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Profil & Langue</h3>
+                            <div class="form-group">
+                                <label for="set-username">Nom d'utilisateur</label>
+                                <input type="text" id="set-username" placeholder="Votre nom">
+                            </div>
+                            <div class="form-group">
+                                <label for="set-language">Langue de l'interface</label>
+                                <select id="set-language">
+                                    <option value="fr">Français</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Préférences</h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Confirmer la suppression</span>
+                                    <input type="checkbox" id="set-confirm-delete" checked style="width: 20px; height: 20px;">
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Vue compacte</span>
+                                    <input type="checkbox" id="set-compact-view" style="width: 20px; height: 20px;">
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Suppression auto terminées</span>
+                                    <input type="checkbox" id="set-auto-delete" style="width: 20px; height: 20px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid" style="margin-top: 2rem;">
+                        <div class="settings-section">
+                            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Données</h3>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="export-data-btn" class="btn btn-secondary" style="flex: 1; font-size: 0.8rem;">
+                                    <i data-lucide="download"></i> Exporter
+                                </button>
+                                <button type="button" id="import-data-btn" class="btn btn-secondary" style="flex: 1; font-size: 0.8rem;">
+                                    <i data-lucide="upload"></i> Importer
+                                </button>
+                                <input type="file" id="import-file" style="display: none;" accept=".json">
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: var(--danger);">Zone de danger</h3>
+                            <button type="button" id="clear-all-btn" class="btn" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger); width: 100%;">
+                                Réinitialiser l'application
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="close-settings-btn" data-i18n="cancel">Annuler</button>
+                <button type="button" class="btn btn-primary" id="save-settings-btn" data-i18n="save">Enregistrer les réglages</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Scripts -->
+    <script src="js/store.js"></script>
+    <script src="js/tasks.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
