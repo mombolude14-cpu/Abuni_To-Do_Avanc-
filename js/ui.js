@@ -131,7 +131,17 @@ const UI = {
         div.dataset.id = task.id;
 
         const dict = this.translations[this.currentLang];
-        const dateFormatted = task.dueDate ? new Date(task.dueDate).toLocaleDateString(this.currentLang === 'fr' ? 'fr-FR' : 'en-US') : dict.no_date;
+        
+        // Overdue check
+        let isOverdue = false;
+        let dateDisplay = dict.no_date;
+        if (task.dueDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const due = new Date(task.dueDate);
+            isOverdue = due < today && !task.completed;
+            dateDisplay = due.toLocaleDateString(this.currentLang === 'fr' ? 'fr-FR' : 'en-US');
+        }
         
         const priorityLabels = { 
             'low': dict.priority_low, 
@@ -141,16 +151,21 @@ const UI = {
         const priorityLabel = priorityLabels[task.priority] || task.priority;
         
         div.innerHTML = `
-            <div class="task-checkbox ${task.completed ? 'completed' : ''}" onclick="window.App.handleToggleTask('${task.id}')">
-                <i data-lucide="check"></i>
+            <div class="task-checkbox ${task.completed ? 'completed' : ''} ${task.inProgress ? 'in-progress' : ''}" 
+                 onclick="window.App.handleToggleTask('${task.id}')" 
+                 title="${task.completed ? 'Rétablir' : 'Terminer'}">
+                <i data-lucide="${task.completed ? 'rotate-ccw' : 'check'}"></i>
             </div>
             <div class="task-info">
-                <h3 class="task-title">${task.title}</h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <h3 class="task-title">${task.title}</h3>
+                    ${task.inProgress ? '<span class="status-badge">En cours...</span>' : ''}
+                </div>
                 ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
                 <div class="task-meta">
-                    <span class="meta-item">
-                        <i data-lucide="calendar"></i>
-                        ${dateFormatted}
+                    <span class="meta-item ${isOverdue ? 'overdue' : ''}">
+                        <i data-lucide="${isOverdue ? 'alert-circle' : 'calendar'}"></i>
+                        ${dateDisplay}
                     </span>
                     <span class="meta-item">
                         <i data-lucide="tag"></i>
@@ -160,10 +175,20 @@ const UI = {
                 </div>
             </div>
             <div class="task-actions">
-                <button class="action-btn edit-btn" onclick="window.App.handleEditTask('${task.id}')">
+                ${!task.completed && !task.inProgress ? `
+                    <button class="action-btn start-btn" onclick="window.App.handleStartTask('${task.id}')" title="Démarrer la tâche">
+                        <i data-lucide="play-circle"></i>
+                    </button>
+                ` : ''}
+                ${task.inProgress ? `
+                    <button class="action-btn stop-btn" onclick="window.App.handleStopTask('${task.id}')" title="Mettre en pause">
+                        <i data-lucide="pause-circle"></i>
+                    </button>
+                ` : ''}
+                <button class="action-btn edit-btn" onclick="window.App.handleEditTask('${task.id}')" title="Modifier">
                     <i data-lucide="edit-3"></i>
                 </button>
-                <button class="action-btn delete-btn" onclick="window.App.handleDeleteTask('${task.id}')">
+                <button class="action-btn delete-btn" onclick="window.App.handleDeleteTask('${task.id}')" title="Supprimer">
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>

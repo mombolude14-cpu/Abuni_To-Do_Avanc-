@@ -222,6 +222,32 @@ const App = {
         const task = this.state.tasks.find(t => t.id === id);
         if (task) {
             task.completed = !task.completed;
+            task.inProgress = false; // Stop progress if toggled
+            Store.saveTasks(this.state.tasks);
+            this.refreshTasks();
+        }
+    },
+
+    /**
+     * Handle task start (In Progress)
+     */
+    handleStartTask(id) {
+        const task = this.state.tasks.find(t => t.id === id);
+        if (task) {
+            task.inProgress = true;
+            task.completed = false;
+            Store.saveTasks(this.state.tasks);
+            this.refreshTasks();
+        }
+    },
+
+    /**
+     * Handle task stop (Back to Pending)
+     */
+    handleStopTask(id) {
+        const task = this.state.tasks.find(t => t.id === id);
+        if (task) {
+            task.inProgress = false;
             Store.saveTasks(this.state.tasks);
             this.refreshTasks();
         }
